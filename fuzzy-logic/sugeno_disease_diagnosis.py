@@ -4,6 +4,45 @@ import skfuzzy.membership as mf
 import matplotlib.pyplot as plt
 
 
+# custom function
+def sugeno_polynomial_f(x, label):    
+    if label == 'not_risk' and x != 0:
+        b = 1.1
+        a = 0.1
+        # y = bx - a 
+        return b * x - a
+
+    elif label == 'little_risk' and x != 0:
+        b = 1.2
+        a = 0.12
+        # y = bx - a 
+        return b * x - a
+
+    elif label == 'middle_risk' and x != 0:
+        b = 1.3
+        a = 0.13
+        # y = bx - a 
+        return b * x - 0.13
+        
+    elif label == 'high_risk' and x != 0:
+        b = 1.4
+        a = 0.14
+        # y = bx - a 
+        return b * x - a
+            
+    elif label == 'very_high_risk' and x != 0:
+        b = 1.4
+        a = 0.14
+        # y = bx - a
+        return b * x - a
+    
+    elif x == 0:
+        return 0
+
+# define vectorized sigmoid
+sugeno_f = np.vectorize(sugeno_polynomial_f, otypes=[float])
+
+
 # Input
 input_age = int(input("Age: "))
 input_blood_pressure = int(input("Blood Pressure: "))
@@ -133,17 +172,17 @@ infer_rules = {
 }
 
 infer_output = {
-    'not': np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(infer_rules[1], infer_rules[5]), infer_rules[6]), infer_rules[7]), infer_rules[8]), infer_rules[12]),
-    'little': np.fmax(np.fmax(infer_rules[2], infer_rules[13]), infer_rules[16]),
-    'middle': np.fmax(np.fmax(infer_rules[3], infer_rules[9]), infer_rules[22]),
-    'high': np.fmax(np.fmax(np.fmax(infer_rules[4], infer_rules[10]), infer_rules[14]), infer_rules[17]),
-    'very_high': np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(infer_rules[11], infer_rules[15]), infer_rules[18]), infer_rules[19]), infer_rules[20]), infer_rules[21]),infer_rules[23]), infer_rules[24])    
+    'not': sugeno_f(np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(infer_rules[1], infer_rules[5]), infer_rules[6]), infer_rules[7]), infer_rules[8]), infer_rules[12]), 'not_risk'),
+    'little': sugeno_f(np.fmax(np.fmax(infer_rules[2], infer_rules[13]), infer_rules[16]), 'little_risk'),
+    'middle': sugeno_f(np.fmax(np.fmax(infer_rules[3], infer_rules[9]), infer_rules[22]), 'middle_risk'),
+    'high': sugeno_f(np.fmax(np.fmax(np.fmax(infer_rules[4], infer_rules[10]), infer_rules[14]), infer_rules[17]), 'high_risk'),
+    'very_high': sugeno_f(np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(np.fmax(infer_rules[11], infer_rules[15]), infer_rules[18]), infer_rules[19]), infer_rules[20]), infer_rules[21]),infer_rules[23]), infer_rules[24]), 'very_high_risk')    
 }
 
 out_risk = np.fmax(np.fmax(np.fmax(np.fmax(infer_output['not'], infer_output['little']), infer_output['middle']), infer_output['high']), infer_output['very_high'])
 
 # Defuzzification
-defuzzified  = fuzz.defuzz(y_risk, out_risk, 'centroid')
+defuzzified  = fuzz.defuzz(y_risk, out_risk, 'mom')
 
 result = fuzz.interp_membership(y_risk, out_risk, defuzzified)
 
@@ -152,7 +191,7 @@ print("\nCoroner Heart Diagnosis:", defuzzified)
 
 def diagnosed_as(output):
     if np.sum(output):
-        return fuzz.defuzz(y_risk, output, 'centroid')
+        return fuzz.defuzz(y_risk, output, 'mom')
     else:
         return 0
 

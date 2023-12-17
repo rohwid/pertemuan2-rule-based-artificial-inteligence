@@ -143,7 +143,7 @@ infer_output = {
 out_risk = np.fmax(np.fmax(np.fmax(np.fmax(infer_output['not'], infer_output['little']), infer_output['middle']), infer_output['high']), infer_output['very_high'])
 
 # Defuzzification
-defuzzified  = fuzz.defuzz(y_risk, out_risk, 'centroid')
+defuzzified  = fuzz.defuzz(y_risk, out_risk, 'mom')
 
 result = fuzz.interp_membership(y_risk, out_risk, defuzzified)
 
@@ -152,7 +152,7 @@ print("\nCoroner Heart Diagnosis:", defuzzified)
 
 def diagnosed_as(output):
     if np.sum(output):
-        return fuzz.defuzz(y_risk, output, 'centroid')
+        return fuzz.defuzz(y_risk, output, 'mom')
     else:
         return 0
 
